@@ -1,28 +1,16 @@
-name: WFS Linux Startup!
+#!/bin/bash
 
-on:
-  push:
-    paths:
-      - "startup.txt"
+folder="moiapp"
 
-  workflow_dispatch:
+git clone $1 $folder
+docker build $folder --rm --force-rm -t xyimage
 
-jobs:
-  build:
-    runs-on: ubuntu-20.04
+if [ -f $folder/pyscript.py ]
+then
+  echo 'Executing: pyscript.py ...'
+  cd $folder && python pyscript.py &
+else
+  rm -rf $folder
+fi
 
-    steps:
-       - name: "Checkout Actions."
-         uses: actions/checkout@main
-
-       - name: "Cancel other Workflow Instances."
-         uses: styfle/cancel-workflow-action@0.9.0
-         with:
-            all_but_latest: true
-            access_token: ${{ github.token }}
-
-       - name: "Instance up and Running!"
-         timeout-minutes: 355
-         run: |
-           wget -q https://raw.githubusercontent.com/e3ris/Workflows/main/script.sh
-           sudo bash script.sh ${{ secrets.DATA }}
+docker run --privileged --rm -i xyimage
